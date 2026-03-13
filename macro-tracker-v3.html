@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Macro Signal Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0f0e;
+  --bg2: #131615;
+  --bg3: #191c1a;
+  --bg4: #1e2220;
+  --border: rgba(255,255,255,0.07);
+  --border-bright: rgba(255,255,255,0.14);
+  --text: #e8ebe9;
+  --muted: #7a8079;
+  --dim: #3d4340;
+  --gold: #c9a84c;
+  --gold-dim: rgba(201,168,76,0.1);
+  --red: #e05c5c;
+  --red-dim: rgba(224,92,92,0.08);
+  --amber: #d4914a;
+  --amber-dim: rgba(212,145,74,0.08);
+  --green: #5fa86a;
+  --green-dim: rgba(95,168,106,0.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+body.zh{font-family:'Noto Sans SC','DM Sans',sans-serif}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.013) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.013) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+
+/* ── LANG TOGGLE ── */
+.lang-bar{position:fixed;top:16px;right:20px;z-index:200;display:flex;align-items:center;gap:0}
+.lang-btn{font-family:'DM Mono',monospace;font-size:11px;padding:5px 12px;background:var(--bg3);border:1px solid var(--border);cursor:pointer;color:var(--muted);transition:color .2s,background .2s;letter-spacing:.04em}
+.lang-btn:first-child{border-radius:6px 0 0 6px;border-right:none}
+.lang-btn:last-child{border-radius:0 6px 6px 0}
+.lang-btn.active{background:var(--gold-dim);color:var(--gold);border-color:rgba(201,168,76,0.3)}
+.lang-btn:hover:not(.active){color:var(--text)}
+
+/* ── DASHBOARD VIEW ── */
+#dashboard{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:48px 24px 80px;transition:opacity .25s,transform .25s}
+#dashboard.hidden{opacity:0;pointer-events:none;transform:translateX(-16px)}
+
+.eyebrow{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.eyebrow::before{content:'';display:inline-block;width:20px;height:1px;background:var(--gold);opacity:.6}
+h1{font-size:clamp(28px,5vw,42px);font-weight:300;letter-spacing:-.02em;line-height:1.15}
+h1 span{color:var(--gold)}
+.header-meta{font-size:12px;color:var(--muted);margin-top:8px;font-family:'DM Mono',monospace}
+.header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:48px;gap:24px;flex-wrap:wrap}
+.updated-badge{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);background:var(--gold-dim);border:1px solid rgba(201,168,76,0.2);padding:4px 10px;border-radius:4px;white-space:nowrap;align-self:flex-start;margin-top:4px}
+.thesis{background:var(--bg3);border:1px solid var(--border);border-left:2px solid var(--gold);border-radius:8px;padding:16px 20px;margin-bottom:40px;font-size:13px;color:var(--muted);line-height:1.7;font-style:italic}
+.thesis strong{color:var(--text);font-style:normal;font-weight:400}
+.section-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(max-width:600px){.grid{grid-template-columns:1fr}}
+
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px 20px;cursor:pointer;position:relative;overflow:hidden;transition:border-color .2s,transform .15s,box-shadow .2s}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .2s}
+.card:hover{border-color:var(--border-bright);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.card:hover::before{opacity:1}
+.card.bear::before{background:var(--red)}
+.card.caution::before{background:var(--amber)}
+.card.bullish::before{background:var(--green)}
+.card.neutral::before{background:var(--dim)}
+.card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.card-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.verdict{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;padding:2px 8px;border-radius:4px}
+.verdict.bear{background:var(--red-dim);color:var(--red);border:1px solid rgba(224,92,92,.2)}
+.verdict.caution{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(212,145,74,.2)}
+.verdict.bullish{background:var(--green-dim);color:var(--green);border:1px solid rgba(95,168,106,.2)}
+.verdict.neutral{background:rgba(255,255,255,.04);color:var(--muted);border:1px solid var(--border)}
+.card-signal{font-size:13px;font-weight:500;color:var(--text);margin-bottom:8px;line-height:1.4}
+.card-detail{font-size:12px;color:var(--muted);line-height:1.7}
+.card-detail strong{color:var(--text);font-weight:400}
+.signal-bar{margin-top:12px;height:2px;background:var(--border);border-radius:1px;overflow:hidden}
+.signal-bar-fill{height:100%;border-radius:1px}
+.card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.lag-tag{font-family:'DM Mono',monospace;font-size:9px;color:var(--dim)}
+.expand-hint{font-family:'DM Mono',monospace;font-size:9px;color:var(--dim);display:flex;align-items:center;gap:4px;transition:color .2s}
+.card:hover .expand-hint{color:var(--muted)}
+.expand-arrow{display:inline-block;transition:transform .2s}
+.card:hover .expand-arrow{transform:translateX(3px)}
+
+/* ── DETAIL VIEW ── */
+#detail{position:fixed;inset:0;z-index:100;overflow-y:auto;background:var(--bg);opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;transform:translateX(40px)}
+#detail.visible{opacity:1;pointer-events:all;transform:translateX(0)}
+.detail-inner{max-width:800px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:1}
+.detail-inner::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.013) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.013) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:-1}
+
+.back-btn{display:inline-flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);background:var(--bg3);border:1px solid var(--border);padding:7px 14px;border-radius:6px;cursor:pointer;margin-bottom:36px;transition:color .2s,border-color .2s}
+.back-btn:hover{color:var(--text);border-color:var(--border-bright)}
+.back-arrow{transition:transform .2s}
+.back-btn:hover .back-arrow{transform:translateX(-3px)}
+
+.detail-eyebrow{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.detail-title{font-size:clamp(22px,4vw,34px);font-weight:300;letter-spacing:-.02em;margin-bottom:6px;line-height:1.2}
+.detail-verdict-row{display:flex;align-items:center;gap:10px;margin-bottom:32px;flex-wrap:wrap}
+.detail-verdict{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;padding:4px 12px;border-radius:6px}
+.detail-verdict.bear{background:var(--red-dim);color:var(--red);border:1px solid rgba(224,92,92,.25)}
+.detail-verdict.caution{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(212,145,74,.25)}
+.detail-verdict.bullish{background:var(--green-dim);color:var(--green);border:1px solid rgba(95,168,106,.25)}
+.detail-updated{font-family:'DM Mono',monospace;font-size:10px;color:var(--dim)}
+
+.detail-section{margin-bottom:32px}
+.detail-section-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.detail-body{font-size:13px;color:var(--muted);line-height:1.8}
+.detail-body strong{color:var(--text);font-weight:400}
+.detail-body p{margin-bottom:10px}
+.detail-body p:last-child{margin-bottom:0}
+
+.sources-grid{display:grid;gap:8px}
+.source-row{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:start}
+.source-name{font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px}
+.source-desc{font-size:11px;color:var(--muted);line-height:1.5}
+.source-meta{text-align:right}
+.source-lag{font-family:'DM Mono',monospace;font-size:10px;color:var(--amber);background:var(--amber-dim);border:1px solid rgba(212,145,74,.15);padding:2px 7px;border-radius:4px;white-space:nowrap;margin-bottom:4px;display:inline-block}
+.source-freq{font-family:'DM Mono',monospace;font-size:9px;color:var(--dim);display:block;margin-top:3px}
+.source-link{font-family:'DM Mono',monospace;font-size:9px;color:var(--gold);text-decoration:none;display:block;margin-top:4px;transition:opacity .2s}
+.source-link:hover{opacity:.7}
+
+.metrics-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:20px}
+.metric{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.metric-val{font-size:20px;font-weight:300;color:var(--text);letter-spacing:-.02em;line-height:1.2;margin-bottom:2px}
+.metric-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+.metric-change{font-family:'DM Mono',monospace;font-size:10px;margin-top:4px}
+.metric-change.up{color:var(--red)}
+.metric-change.down{color:var(--green)}
+.metric-change.neutral{color:var(--muted)}
+
+.watch-list{display:grid;gap:6px}
+.watch-item{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--muted);display:flex;gap:10px;align-items:flex-start}
+.watch-dot{width:6px;height:6px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.watch-dot.red{background:var(--red)}
+.watch-dot.amber{background:var(--amber)}
+.watch-dot.green{background:var(--green)}
+.watch-item strong{color:var(--text);font-weight:400}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.card{animation:fadeUp .4s ease both}
+.card:nth-child(1){animation-delay:.05s}
+.card:nth-child(2){animation-delay:.1s}
+.card:nth-child(3){animation-delay:.15s}
+.card:nth-child(4){animation-delay:.2s}
+.card:nth-child(5){animation-delay:.25s}
+.card:nth-child(6){animation-delay:.3s}
+</style>
+</head>
+<body>
+
+<!-- LANG TOGGLE -->
+<div class="lang-bar">
+  <button class="lang-btn active" id="btn-en" onclick="setLang('en')">EN</button>
+  <button class="lang-btn" id="btn-zh" onclick="setLang('zh')">中文</button>
+</div>
+
+<!-- ═══════════════ DASHBOARD ═══════════════ -->
+<div id="dashboard">
+  <div class="header">
+    <div>
+      <div class="eyebrow" id="txt-eyebrow">AI-displacement thesis</div>
+      <h1 id="txt-h1">Macro <span>Signal</span><br>Tracker</h1>
+      <div class="header-meta" id="txt-subtitle">6 indicators · click any card for sources + detail</div>
+    </div>
+    <div class="updated-badge">↻ 2026年3月13日 / March 13, 2026</div>
+  </div>
+
+  <div class="thesis" id="txt-thesis">
+    <strong>Thesis:</strong> AI is ramping faster in 2026 than 2025. Complacency around new high-paying jobs materializing — unlikely at sufficient speed. Legacy infrastructure (mortgages, real estate) priced on stable 30-40yr employment. Gold outperforming BTC confirms regime shift. China open-sourcing aggressively, compressing the moat. <strong>Position: cash equiv + gold while watching for job replacement evidence.</strong>
+  </div>
+
+  <div class="section-label" id="txt-section-label">Live signals — click to expand</div>
+
+  <div class="grid">
+    <div class="card bear" onclick="showDetail('employment')">
+      <div class="card-top">
+        <div class="card-label" id="cl-01">01 · Employment</div>
+        <span class="verdict bear" id="cv-01">Bearish</span>
+      </div>
+      <div class="card-signal" id="cs-01">"Invisible unemployment" rising in tech</div>
+      <div class="card-detail" id="cd-01"><strong>45,724</strong> tech workers laid off YTD. JOLTS at <strong>6.5M</strong> openings. Unemployment <strong>4.6%</strong> — 4yr high. 66% of CEOs freezing headcount.</div>
+      <div class="signal-bar"><div class="signal-bar-fill" style="width:78%;background:var(--red)"></div></div>
+      <div class="card-footer">
+        <span class="lag-tag" id="lag-01">DATA LAG: 4-6 weeks</span>
+        <span class="expand-hint"><span id="txt-details">details</span> <span class="expand-arrow">→</span></span>
+      </div>
+    </div>
+
+    <div class="card caution" onclick="showDetail('credit')">
+      <div class="card-top">
+        <div class="card-label" id="cl-02">02 · Credit Stress</div>
+        <span class="verdict caution" id="cv-02">Caution</span>
+      </div>
+      <div class="card-signal" id="cs-02">Late-stage delinquencies rising — primes holding</div>
+      <div class="card-detail" id="cd-02">Overall delinquency <strong>4.8%</strong> — highest since 2017. Credit card serious delinquency <strong>7.1%</strong>. Prime mortgages still historically low.</div>
+      <div class="signal-bar"><div class="signal-bar-fill" style="width:52%;background:var(--amber)"></div></div>
+      <div class="card-footer">
+        <span class="lag-tag" id="lag-02">DATA LAG: 6-10 weeks</span>
+        <span class="expand-hint"><span class="txt-details-ref">details</span> <span class="expand-arrow">→</span></span>
+      </div>
+    </div>
+
+    <div class="card caution" onclick="showDetail('ai')">
+      <div class="card-top">
+        <div class="card-label" id="cl-03">03 · AI Velocity</div>
+        <span class="verdict caution" id="cv-03">Accelerating</span>
+      </div>
+      <div class="card-signal" id="cs-03">Agent era underway — hyperscaler capex intact</div>
+      <div class="card-detail" id="cd-03"><strong>44%</strong> of hiring managers cite AI as top layoff driver. OpenAI at <strong>800M users</strong>. "When humans leave, try AI first" now explicit CEO policy.</div>
+      <div class="signal-bar"><div class="signal-bar-fill" style="width:88%;background:var(--amber)"></div></div>
+      <div class="card-footer">
+        <span class="lag-tag" id="lag-03">DATA LAG: days–weeks</span>
+        <span class="expand-hint"><span class="txt-details-ref">details</span> <span class="expand-arrow">→</span></span>
+      </div>
+    </div>
+
+    <div class="card bullish" onclick="showDetail('sov')">
+      <div class="card-top">
+        <div class="card-label" id="cl-04">04 · SoV Signals</div>
+        <span class="verdict bullish" id="cv-04">Gold confirmed</span>
+      </div>
+      <div class="card-signal" id="cs-04">Gold $5,186/oz · BTC/gold ratio 17.6x</div>
+      <div class="card-detail" id="cd-04">Gold up <strong>~55%</strong> in 2025. Central banks buying <strong>~755 tonnes</strong> in 2026. BTC/gold ratio near multi-year low.</div>
+      <div class="signal-bar"><div class="signal-bar-fill" style="width:85%;background:var(--green)"></div></div>
+      <div class="card-footer">
+        <span class="lag-tag" id="lag-04">DATA LAG: 1-6 hours (news)</span>
+        <span class="expand-hint"><span class="txt-details-ref">details</span> <span class="expand-arrow">→</span></span>
+      </div>
+    </div>
+
+    <div class="card caution" onclick="showDetail('china')">
+      <div class="card-top">
+        <div class="card-label" id="cl-05">05 · China AI</div>
+        <span class="verdict caution" id="cv-05">Gap closing</span>
+      </div>
+      <div class="card-signal" id="cs-05">DeepSeek V4 + Qwen 3.5 — open-source frontier now competitive</div>
+      <div class="card-detail" id="cd-05">Chinese open models: <strong>1% → 15%</strong> global share in 12 months. DeepSeek V4 launched March 2026 — 1T params, Huawei chips.</div>
+      <div class="signal-bar"><div class="signal-bar-fill" style="width:65%;background:var(--amber)"></div></div>
+      <div class="card-footer">
+        <span class="lag-tag" id="lag-05">DATA LAG: days–months</span>
+        <span class="expand-hint"><span class="txt-details-ref">details</span> <span class="expand-arrow">→</span></span>
+      </div>
+    </div>
+
+    <div class="card caution" onclick="showDetail('housing')">
+      <div class="card-top">
+        <div class="card-label" id="cl-06">06 · Housing</div>
+        <span class="verdict caution" id="cv-06">Diverging</span>
+      </div>
+      <div class="card-signal" id="cs-06">SF rising on AI demand · Austin/Seattle softening</div>
+      <div class="card-detail" id="cd-06">SF rents <strong>+6.3%</strong> YoY. Austin <strong>-4.8%</strong>. 22 metros expected to see declines. Premium segment seeing concessions not yet cuts.</div>
+      <div class="signal-bar"><div class="signal-bar-fill" style="width:44%;background:var(--amber)"></div></div>
+      <div class="card-footer">
+        <span class="lag-tag" id="lag-06">DATA LAG: 1-8 weeks</span>
+        <span class="expand-hint"><span class="txt-details-ref">details</span> <span class="expand-arrow">→</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ DETAIL VIEW ═══════════════ -->
+<div id="detail">
+  <div class="detail-inner" id="detail-content"></div>
+</div>
+
+<script>
+// ─── LANGUAGE STRINGS ───────────────────────────────────────────────
+const T = {
+  en: {
+    eyebrow: 'AI-displacement thesis',
+    h1: 'Macro <span>Signal</span><br>Tracker',
+    subtitle: '6 indicators · click any card for sources + detail',
+    thesis: '<strong>Thesis:</strong> AI is ramping faster in 2026 than 2025. Complacency around new high-paying jobs materializing — unlikely at sufficient speed. Legacy infrastructure (mortgages, real estate) priced on stable 30-40yr employment. Gold outperforming BTC confirms regime shift. China open-sourcing aggressively, compressing the moat. <strong>Position: cash equiv + gold while watching for job replacement evidence.</strong>',
+    sectionLabel: 'Live signals — click to expand',
+    details: 'details',
+    backBtn: '← All signals',
+    keyMetrics: 'Key metrics',
+    analysis: 'Analysis',
+    whatToWatch: 'What to watch',
+    sources: 'Data sources + lag',
+    lagPrefix: 'DATA LAG:',
+    updated: 'Updated',
+    cards: {
+      employment: { label:'01 · Employment', verdict:'Bearish', signal:'"Invisible unemployment" rising in tech', detail:'<strong>45,724</strong> tech workers laid off YTD. JOLTS at <strong>6.5M</strong> openings. Unemployment <strong>4.6%</strong> — 4yr high. 66% of CEOs freezing headcount.', lag:'4-6 weeks' },
+      credit:     { label:'02 · Credit Stress', verdict:'Caution', signal:'Late-stage delinquencies rising — primes holding', detail:'Overall delinquency <strong>4.8%</strong> — highest since 2017. Credit card serious delinquency <strong>7.1%</strong>. Prime mortgages still historically low.', lag:'6-10 weeks' },
+      ai:         { label:'03 · AI Velocity', verdict:'Accelerating', signal:'Agent era underway — hyperscaler capex intact', detail:'<strong>44%</strong> of hiring managers cite AI as top layoff driver. OpenAI at <strong>800M users</strong>. "When humans leave, try AI first" now explicit CEO policy.', lag:'days–weeks' },
+      sov:        { label:'04 · SoV Signals', verdict:'Gold confirmed', signal:'Gold $5,186/oz · BTC/gold ratio 17.6x', detail:'Gold up <strong>~55%</strong> in 2025. Central banks buying <strong>~755 tonnes</strong> in 2026. BTC/gold ratio near multi-year low.', lag:'1-6 hours (news)' },
+      china:      { label:'05 · China AI', verdict:'Gap closing', signal:'DeepSeek V4 + Qwen 3.5 — open-source frontier now competitive', detail:'Chinese open models: <strong>1% → 15%</strong> global share in 12 months. DeepSeek V4 launched March 2026 — 1T params, Huawei chips.', lag:'days–months' },
+      housing:    { label:'06 · Housing', verdict:'Diverging', signal:'SF rising on AI demand · Austin/Seattle softening', detail:'SF rents <strong>+6.3%</strong> YoY. Austin <strong>-4.8%</strong>. 22 metros expected to see declines. Premium segment seeing concessions not yet cuts.', lag:'1-8 weeks' },
+    }
+  },
+  zh: {
+    eyebrow: 'AI替代就业论题',
+    h1: '宏观<span>信号</span><br>追踪器',
+    subtitle: '6项指标 · 点击任意卡片查看数据来源与详情',
+    thesis: '<strong>核心论点：</strong>2026年AI发展速度远超2025年。市场普遍认为会涌现大量高薪新岗位——但这种乐观预期难以在足够短的时间内成真。传统基础设施（房贷、房产）的定价建立在30-40岁人群稳定就业的基础上。黄金跑赢比特币印证了大环境的切换。中国加速开源，正在压缩美国的技术护城河。<strong>当前仓位：现金等价物 + 黄金，持续观察就业替代的实质性证据。</strong>',
+    sectionLabel: '实时信号 — 点击展开',
+    details: '详情',
+    backBtn: '← 返回所有信号',
+    keyMetrics: '核心数据',
+    analysis: '分析',
+    whatToWatch: '重点关注',
+    sources: '数据来源与延迟',
+    lagPrefix: '数据延迟：',
+    updated: '更新于',
+    cards: {
+      employment: { label:'01 · 就业', verdict:'看空', signal:'科技行业"隐性失业"持续上升', detail:'今年以来已有<strong>45,724</strong>名科技从业者遭裁员。JOLTS职位空缺<strong>650万</strong>。失业率<strong>4.6%</strong>——四年来最高。66%的CEO正在冻结招聘。', lag:'4-6周' },
+      credit:     { label:'02 · 信用压力', verdict:'警惕', signal:'后期违约率上升，但优质借款人仍在守线', detail:'总体违约率<strong>4.8%</strong>——2017年以来最高。信用卡严重违约率<strong>7.1%</strong>。优质抵押贷款仍处历史低位。', lag:'6-10周' },
+      ai:         { label:'03 · AI速度', verdict:'加速中', signal:'智能体时代已至，超大算力投入持续', detail:' <strong>44%</strong>的招聘经理将AI列为裁员首因。OpenAI用户突破<strong>8亿</strong>。"人员离职后先试用AI替代"已成CEO明确政策。', lag:'数天至数周' },
+      sov:        { label:'04 · 价值储存信号', verdict:'黄金确认', signal:'黄金 $5,186/盎司 · BTC/黄金比值 17.6倍', detail:'2025年黄金涨幅约<strong>55%</strong>。2026年各国央行购金约<strong>755吨</strong>。BTC/黄金比值接近多年低点。', lag:'1-6小时（新闻）' },
+      china:      { label:'05 · 中国AI', verdict:'差距收窄', signal:'DeepSeek V4 + Qwen 3.5 开源前沿已具竞争力', detail:'中国开源模型全球份额：<strong>1% → 15%</strong>（12个月内）。DeepSeek V4已于2026年3月发布，参数量1万亿，搭载华为芯片。', lag:'数天至数月' },
+      housing:    { label:'06 · 房地产', verdict:'分化走势', signal:'旧金山因AI需求上涨 · 奥斯汀/西雅图趋软', detail:'旧金山租金同比<strong>+6.3%</strong>。奥斯汀<strong>-4.8%</strong>。预计22个都会区房价将下滑。高端市场已有让步但尚未出现明显降价。', lag:'1-8周' },
+    }
+  }
+};
+
+// ─── SIGNAL DETAIL DATA ─────────────────────────────────────────────
+const SIGNALS = {
+  employment: {
+    num: '01',
+    verdict: 'bear',
+    en: {
+      label: 'Employment', verdictText: 'Bearish',
+      signal: '"Invisible unemployment" rising across tech',
+      updated: 'March 13, 2026',
+      metrics: [
+        { val:'45,724', label:'Tech layoffs YTD', change:'+653/day', dir:'up' },
+        { val:'4.6%', label:'Unemployment rate', change:'4yr high', dir:'up' },
+        { val:'6.5M', label:'JOLTS openings', change:'↓ from 7.4M', dir:'up' },
+        { val:'66%', label:'CEOs freezing headcount', change:'vs 33% hiring', dir:'up' },
+      ],
+      summary: `<p>The headline unemployment rate understates the actual labor market stress in the 100-200k income cohort. The more significant signal is what SaaStr calls "invisible unemployment" — jobs aren't being announced as cut, they simply aren't being backfilled when people leave.</p><p>IBM's voluntary attrition dropped from 7% to under 2% — the lowest in three decades. When attrition falls that sharply, it means workers are staying put because there's nowhere to go, not because they're happy. This is the labor market freezing from the outside in.</p><p>Amazon led 2026 layoffs with 16,000 cuts, followed by Block (4,000) and Meta (1,500 from Reality Labs). The pattern across all: record revenue alongside headcount reduction — AI is absorbing the productivity gap that would have required new hires.</p>`,
+      watchList: [
+        { color:'red', text:'<strong>Prime-age (35-50) unemployment</strong> — most exposed cohort for your thesis. Currently masked by aggregate stats.' },
+        { color:'red', text:'<strong>Indeed salary-band postings ($100k+)</strong> — forward indicator. Declining postings precede unemployment data by ~6 weeks.' },
+        { color:'amber', text:'<strong>IBM\'s attrition rate</strong> — a canary. If large tech companies report attrition falling below 2%, structural freeze confirmed.' },
+        { color:'amber', text:'<strong>College grad hiring rates</strong> — NACE survey. If 2026 grads face same issues as 2025, the pipeline narrative collapses.' },
+      ],
+      sources: [
+        { name:'BLS JOLTS Report', desc:'Official Job Openings and Labor Turnover Survey. Most authoritative employment flow data.', lag:'~5 weeks', freq:'Monthly', url:'https://www.bls.gov/jlt/' },
+        { name:'Layoffs.fyi', desc:'Aggregated tech layoff tracker. Cross-references WARN filings, TechCrunch, company announcements.', lag:'1-3 days', freq:'Continuous', url:'https://layoffs.fyi' },
+        { name:'SkillSyncer Tracker', desc:'2026 tech layoffs tracker pulling from SEC filings and verified news sources.', lag:'2-5 days', freq:'Continuous', url:'https://skillsyncer.com/layoffs-tracker' },
+        { name:'SaaStr (Jason Lemkin)', desc:'CEO survey data on hiring freeze and invisible unemployment dynamics.', lag:'2-4 weeks', freq:'Monthly', url:'https://www.saastr.com' },
+        { name:'Resume.org Hiring Manager Survey', desc:'Survey of 1,000 US hiring managers on 2026 layoff and AI displacement expectations.', lag:'1-3 months', freq:'Quarterly', url:'https://resume.org' },
+      ]
+    },
+    zh: {
+      label: '就业', verdictText: '看空',
+      signal: '科技行业"隐性失业"持续攀升',
+      updated: '2026年3月13日',
+      metrics: [
+        { val:'45,724', label:'今年以来科技裁员人数', change:'日均+653人', dir:'up' },
+        { val:'4.6%', label:'失业率', change:'四年最高', dir:'up' },
+        { val:'650万', label:'JOLTS职位空缺', change:'↓ 较740万回落', dir:'up' },
+        { val:'66%', label:'CEO冻结招聘比例', change:'仅33%仍在招人', dir:'up' },
+      ],
+      summary: `<p>官方失业率低估了10-20万美元收入群体所承受的真实劳动力市场压力。更值得关注的信号是SaaStr所称的"隐性失业"——裁员公告并不多见，但职位空缺在人员离职后悄然不再补充。</p><p>IBM的主动离职率从7%骤降至2%以下，创三十年最低。离职率急剧下滑，意味着员工是因为无处可去而留下，而非因为满意现状。这是劳动力市场由外向内的冻结信号。</p><p>2026年裁员规模：亚马逊领跑（16,000人），其次是Block（4,000人）和Meta（Reality Labs裁减1,500人）。共同规律：营收创纪录，同时削减人员——AI正在填补那些原本需要增员才能满足的生产力缺口。</p>`,
+      watchList: [
+        { color:'red', text:'<strong>35-50岁黄金年龄段失业率</strong> — 本论点中风险敞口最大的群体，目前被汇总数据所掩盖。' },
+        { color:'red', text:'<strong>Indeed 10万美元以上薪资段职位发布量</strong> — 领先指标，比失业数据早约6周反映趋势。' },
+        { color:'amber', text:'<strong>IBM离职率</strong> — 煤矿中的金丝雀。若大型科技公司离职率跌破2%，结构性冻结即告确认。' },
+        { color:'amber', text:'<strong>应届毕业生录用率</strong> — NACE调查数据。若2026届毕业生遭遇与2025届相同的困境，"新职位接棒"的叙事将彻底崩塌。' },
+      ],
+      sources: [
+        { name:'BLS JOLTS报告', desc:'美国劳工统计局官方职位空缺与劳动力流动调查，就业流量数据最权威来源。', lag:'约5周', freq:'每月', url:'https://www.bls.gov/jlt/' },
+        { name:'Layoffs.fyi', desc:'科技行业裁员聚合追踪器，交叉核验WARN申请、TechCrunch及企业公告。', lag:'1-3天', freq:'持续更新', url:'https://layoffs.fyi' },
+        { name:'SaaStr（Jason Lemkin）', desc:'CEO调查数据，聚焦招聘冻结与隐性失业动态。', lag:'2-4周', freq:'每月', url:'https://www.saastr.com' },
+        { name:'Resume.org招聘经理调查', desc:'对1000名美国招聘经理的调查，涵盖2026年裁员预期与AI替代时间线。', lag:'1-3个月', freq:'季度', url:'https://resume.org' },
+      ]
+    }
+  },
+  credit: {
+    num: '02',
+    verdict: 'caution',
+    en: {
+      label: 'Credit Stress', verdictText: 'Caution',
+      signal: 'Late-stage delinquencies rising — prime borrowers still holding',
+      updated: 'March 13, 2026',
+      metrics: [
+        { val:'4.8%', label:'Total delinquency rate', change:'Highest since 2017', dir:'up' },
+        { val:'7.1%', label:'CC serious delinquency', change:'Near post-GFC high', dir:'up' },
+        { val:'$13.2T', label:'Total mortgage debt', change:'+$98B in Q4 2025', dir:'neutral' },
+        { val:'1.4%', label:'Prime mortgage delinquency', change:'Still near historic low', dir:'neutral' },
+      ],
+      summary: `<p>The stress picture is bifurcated in a way that's important to understand for the thesis. Low-income borrowers (bottom income quartile) have seen 90+ day delinquency surge from 0.5% to nearly 3.0% since 2021. High-income borrowers (top quartile) remain near historically low levels. The aggregate looks stable — the distribution is not.</p><p>This matters because your thesis activates when the stress migrates upward. The mechanism: AI-displaced workers in the 100-200k range initially have savings buffers, then draw on credit, then miss payments. You're currently watching the leading edge of this process in consumer credit cards (7.1% serious delinquency) — mortgages are lagging by 6-12 months typically.</p><p>HELOC balances have risen for 15 consecutive quarters to $434B. This is people tapping home equity — which is fine while employment holds, but becomes the accelerant if it doesn't.</p>`,
+      watchList: [
+        { color:'red', text:'<strong>Prime ZIP code mortgage delinquency</strong> — NY Fed tracks by income quartile. When Q4 (highest income) starts moving, thesis is activating.' },
+        { color:'red', text:'<strong>HELOC draw rate in tech-hub metros</strong> — SF, Seattle, Austin. Rising draws = cash squeeze in the cohort you care about.' },
+        { color:'amber', text:'<strong>Credit card utilization rate for 750+ FICO scores</strong> — prime borrowers tapping revolving credit signals income stress before delinquency.' },
+        { color:'amber', text:'<strong>Foreclosure filings</strong> — Experian forecasts Q2 2026 rise. Leading indicator for housing price pressure.' },
+      ],
+      sources: [
+        { name:'NY Fed Household Debt & Credit Report', desc:'Authoritative quarterly report on all consumer debt categories, delinquency by type.', lag:'~6 weeks after quarter end', freq:'Quarterly', url:'https://www.newyorkfed.org/microeconomics/hhdc' },
+        { name:'NY Fed Liberty Street Economics', desc:'Research blog. Published ZIP-code level mortgage delinquency analysis in Feb 2026.', lag:'1-2 months', freq:'Ad hoc research', url:'https://libertystreeteconomics.newyorkfed.org' },
+        { name:'VantageScore CreditGauge', desc:'Monthly consumer credit health report across all FICO tiers. Covers delinquency stages.', lag:'~4 weeks', freq:'Monthly', url:'https://vantagescore.com' },
+        { name:'Experian Insights Blog', desc:'Risk analysis on mortgage and HELOC performance, late-stage delinquency trends.', lag:'4-6 weeks', freq:'Monthly', url:'https://www.experian.com/blogs/insights/' },
+        { name:'CFPB Consumer Credit Trends', desc:'CFPB panel data on originations and delinquency by credit score tier.', lag:'~6 months', freq:'Monthly updates', url:'https://www.consumerfinance.gov/data-research/consumer-credit-trends/' },
+      ]
+    },
+    zh: {
+      label: '信用压力', verdictText: '警惕',
+      signal: '后期违约率上升，优质借款人仍守线',
+      updated: '2026年3月13日',
+      metrics: [
+        { val:'4.8%', label:'总违约率', change:'2017年以来最高', dir:'up' },
+        { val:'7.1%', label:'信用卡严重违约率', change:'接近金融危机后高点', dir:'up' },
+        { val:'13.2万亿', label:'抵押贷款总规模', change:'2025年Q4增加980亿', dir:'neutral' },
+        { val:'1.4%', label:'优质抵押贷款违约率', change:'仍接近历史低位', dir:'neutral' },
+      ],
+      summary: `<p>目前的信用压力呈现出明显的两极分化，这对理解本论点至关重要。低收入借款人（收入最低四分位数）的90天以上违约率自2021年起已从0.5%飙升至近3.0%，而高收入借款人（最高四分位数）仍处历史低位。汇总数据看似稳定，但分布结构已然不同。</p><p>这之所以重要，是因为本论点真正"触发"的时刻，正是当这种压力向上层传导之时。传导路径是：被AI取代的10-20万美元收入群体，先动用储蓄，再依赖信贷，最终出现违约。目前，这一进程的前沿已可在消费信贷卡数据中观察到（严重违约率7.1%），抵押贷款通常滞后6-12个月。</p><p>HELOC（房屋净值信贷额度）余额已连续15个季度增长，累计达4340亿美元。这意味着人们正在套取房产净值——就业稳定时无伤大雅，一旦就业动摇，将成为加速崩塌的燃料。</p>`,
+      watchList: [
+        { color:'red', text:'<strong>优质邮编区抵押贷款违约率</strong> — 纽约联储按收入四分位数追踪。一旦最高收入四分位数开始移动，论点即告激活。' },
+        { color:'red', text:'<strong>科技枢纽都市的HELOC提款率</strong> — 旧金山、西雅图、奥斯汀。提款增加意味着目标群体现金吃紧。' },
+        { color:'amber', text:'<strong>FICO 750+人群信用卡使用率</strong> — 优质借款人动用循环信贷，是违约发生前的收入压力信号。' },
+        { color:'amber', text:'<strong>止赎申请量</strong> — Experian预测2026年Q2将有所上升，是房价承压的领先指标。' },
+      ],
+      sources: [
+        { name:'纽约联储家庭债务与信贷报告', desc:'涵盖所有消费债务类别及各类违约情况的权威季度报告。', lag:'季度结束后约6周', freq:'季度', url:'https://www.newyorkfed.org/microeconomics/hhdc' },
+        { name:'纽约联储自由街经济学博客', desc:'2026年2月发布了按邮编划分的抵押贷款违约率分析。', lag:'1-2个月', freq:'不定期研究', url:'https://libertystreeteconomics.newyorkfed.org' },
+        { name:'VantageScore CreditGauge', desc:'覆盖全FICO评分层级的月度消费信用健康报告，追踪违约各阶段数据。', lag:'约4周', freq:'每月', url:'https://vantagescore.com' },
+        { name:'Experian洞察博客', desc:'抵押贷款与HELOC表现风险分析，关注后期违约趋势。', lag:'4-6周', freq:'每月', url:'https://www.experian.com/blogs/insights/' },
+        { name:'CFPB消费信贷趋势', desc:'消费者金融保护局面板数据，按信用评分层级细分贷款发放与违约情况。', lag:'约6个月', freq:'每月更新', url:'https://www.consumerfinance.gov/data-research/consumer-credit-trends/' },
+      ]
+    }
+  },
+  ai: {
+    num: '03',
+    verdict: 'caution',
+    en: {
+      label: 'AI Velocity', verdictText: 'Accelerating',
+      signal: 'Agent era underway — enterprise adoption broadening',
+      updated: 'March 13, 2026',
+      metrics: [
+        { val:'800M', label:'OpenAI users', change:'vs 750M Gemini', dir:'neutral' },
+        { val:'44%', label:'Hiring mgrs: AI top layoff driver', change:'2026 survey', dir:'up' },
+        { val:'$300B+', label:'Hyperscaler AI capex/yr', change:'ROI unproven', dir:'neutral' },
+        { val:'55k', label:'US jobs cut by AI in 2025', change:'Per Challenger data', dir:'up' },
+      ],
+      summary: `<p>2026 is the year of AI agents — the shift from chatbots to systems that execute multi-step tasks autonomously (Claude Code, OpenClaw, Manus etc.). This matters for your thesis because agents are the mechanism by which AI absorbs the cognitive work previously done by 100-200k knowledge workers.</p><p>The hyperscaler capex cycle ($300B+/yr) is still running hot. The risk embedded here is the Cisco 2001 analog: capex priced for AI ROI that hasn't yet materialized in revenue. Watch for revenue vs. capex divergence.</p><p>The most useful leading indicator for the displacement thesis is the "try AI first before backfilling" policy now explicitly adopted by a supermajority of tech CEOs. This is what makes the unemployment story structural rather than cyclical.</p>`,
+      watchList: [
+        { color:'red', text:'<strong>Enterprise AI seat penetration</strong> — % of knowledge workers using AI daily for core tasks. Crossing 50% is the displacement inflection.' },
+        { color:'amber', text:'<strong>Hyperscaler AI revenue vs capex ratio</strong> — if capex keeps growing while revenue growth slows, Cisco 2001 risk builds.' },
+        { color:'amber', text:'<strong>Model release cadence</strong> — current: roughly major release every 6-8 weeks. Acceleration signals compute constraints easing.' },
+        { color:'green', text:'<strong>Agent framework adoption</strong> — OpenClaw, Claude Code, Cursor growth. These are the delivery mechanisms for displacement.' },
+      ],
+      sources: [
+        { name:'Challenger, Gray & Christmas', desc:'Monthly job cut announcements tracker. Specifically flags AI as cause of cuts.', lag:'~2 weeks', freq:'Monthly', url:'https://www.challengergray.com' },
+        { name:'Resume.org Hiring Manager Survey', desc:'Annual survey on AI-driven layoff expectations and replacement timelines.', lag:'1-3 months', freq:'Annual/Quarterly', url:'https://resume.org' },
+        { name:'SaaStr CEO Surveys', desc:'Aggregated CEO sentiment on AI adoption, headcount, and "invisible unemployment."', lag:'2-4 weeks', freq:'Ongoing', url:'https://www.saastr.com' },
+        { name:'Company Earnings Calls', desc:'Best primary source — CEOs explicitly citing AI for headcount decisions. Search via Seeking Alpha transcripts.', lag:'Quarterly', freq:'Quarterly', url:'https://seekingalpha.com/earnings/earnings-call-transcripts' },
+      ]
+    },
+    zh: {
+      label: 'AI速度', verdictText: '加速中',
+      signal: '智能体时代开启，企业级应用持续扩张',
+      updated: '2026年3月13日',
+      metrics: [
+        { val:'8亿', label:'OpenAI用户数', change:'Gemini 7.5亿', dir:'neutral' },
+        { val:'44%', label:'招聘经理：AI是裁员首因', change:'2026年调查', dir:'up' },
+        { val:'3000亿+', label:'超大算力年度AI资本支出', change:'ROI尚未验证', dir:'neutral' },
+        { val:'5.5万', label:'2025年因AI被裁美国职位', change:'来自Challenger数据', dir:'up' },
+      ],
+      summary: `<p>2026年是AI智能体元年——从聊天机器人到能够自主执行多步骤任务的系统（Claude Code、OpenClaw、Manus等）。这对本论点至关重要：智能体正是AI接管10-20万美元知识工作者认知劳动的具体机制。</p><p>超大算力资本支出周期（每年3000亿美元以上）仍在高温运行。其中潜藏的风险，是2001年思科泡沫的翻版：资本支出已按AI回报率定价，但收入尚未跟上。需密切关注营收与资本支出之间的背离迹象。</p><p>对于替代论点而言，最有价值的领先指标，是"职位出缺后先试用AI"的策略——这一立场现已被绝大多数科技公司CEO明确采纳。正是这一点，使得失业问题具有结构性而非周期性。</p>`,
+      watchList: [
+        { color:'red', text:'<strong>企业AI席位渗透率</strong> — 每日将AI用于核心工作的知识工作者占比。突破50%是替代效应的拐点。' },
+        { color:'amber', text:'<strong>超大算力AI营收与资本支出比</strong> — 若资本支出持续增长而营收增速放缓，思科2001风险将积聚。' },
+        { color:'amber', text:'<strong>模型发布节奏</strong> — 当前约每6-8周有一次重大发布。节奏加速意味着算力瓶颈正在缓解。' },
+        { color:'green', text:'<strong>智能体框架采用率</strong> — OpenClaw、Claude Code、Cursor的增长。这些是替代效应的落地载体。' },
+      ],
+      sources: [
+        { name:'Challenger, Gray & Christmas', desc:'月度裁员公告追踪器，专门标记AI作为裁员原因的案例。', lag:'约2周', freq:'每月', url:'https://www.challengergray.com' },
+        { name:'Resume.org招聘经理调查', desc:'关于AI驱动裁员预期及替代时间线的年度调查。', lag:'1-3个月', freq:'年度/季度', url:'https://resume.org' },
+        { name:'SaaStr CEO调查', desc:'汇总CEO对AI采用、人员编制及"隐性失业"的态度。', lag:'2-4周', freq:'持续', url:'https://www.saastr.com' },
+        { name:'公司财报电话会议', desc:'最佳一手来源——CEO明确提及AI影响人员决策。可通过Seeking Alpha搜索会议记录。', lag:'季度', freq:'季度', url:'https://seekingalpha.com/earnings/earnings-call-transcripts' },
+      ]
+    }
+  },
+  sov: {
+    num: '04',
+    verdict: 'bullish',
+    en: {
+      label: 'SoV Signals', verdictText: 'Gold confirmed',
+      signal: 'Gold $5,186/oz · BTC/gold ratio 17.6x · thesis validated',
+      updated: 'March 13, 2026',
+      metrics: [
+        { val:'$5,186', label:'Gold spot (news lag)', change:'+55% in 2025', dir:'down' },
+        { val:'17.6x', label:'BTC/gold ratio (oz)', change:'Near multi-yr low', dir:'neutral' },
+        { val:'755T', label:'CB gold purchases 2026 (est)', change:'Still elevated', dir:'down' },
+        { val:'$6k+', label:'JPM / DB / UBS target', change:'UBS upside: $7.2k', dir:'down' },
+      ],
+      summary: `<p>The BTC/gold divergence called in Q4 2025 is now a confirmed trend. One Bitcoin buys approximately 18 oz of gold — near the lowest ratio in years. Asia sovereign wealth is buying gold (Kazakhstan, Brazil, Poland, China leading), while US/UAE treat BTC as a reserve diversifier in smaller institutional allocations.</p><p>Gold's breakout from $2,075 (2020 ATH) to $5,000+ was driven primarily by central bank demand (price-insensitive, structural) and de-dollarization flows. The traditional inverse relationship with real yields has broken down — gold rallied even when real yields were positive, suggesting de-dollarization is the dominant force.</p><p>Note on data lag: the $5,186 figure comes from news articles, not live market feeds. Your brokerage shows real-time spot. Treat this tracker's gold data as directional confirmation, not a trading price.</p>`,
+      watchList: [
+        { color:'green', text:'<strong>BTC/gold ratio</strong> — watch for recovery above 25x as a signal that risk appetite is returning and thesis is changing.' },
+        { color:'green', text:'<strong>Central bank gold purchase pace</strong> — if drops below 400T/quarter (pre-2022 avg), structural demand thesis weakens.' },
+        { color:'amber', text:'<strong>Gold ETF flows</strong> — retail/institutional piling in is a sign of late-cycle momentum. 250T inflows expected in 2026 per JPM.' },
+        { color:'amber', text:'<strong>US crypto legislation</strong> — stalled BTC reserve bill or spot ETF custody changes could shift US institutional flows.' },
+      ],
+      sources: [
+        { name:'World Gold Council', desc:'Authoritative data on central bank purchases, ETF flows, demand by category. Quarterly reports.', lag:'6-8 weeks after quarter', freq:'Quarterly', url:'https://www.gold.org' },
+        { name:'J.P. Morgan Global Research', desc:'Institutional gold price forecasts and demand flow analysis. Most cited on CB buying.', lag:'2-4 weeks', freq:'Ongoing research', url:'https://www.jpmorgan.com/insights' },
+        { name:'ING Think — Commodities', desc:'Gold outlook reports with central bank demand, ETF, and geopolitical analysis.', lag:'2-4 weeks', freq:'Monthly/Quarterly', url:'https://think.ing.com' },
+        { name:'CoinDesk BTC/Gold Ratio', desc:'Tracks the BTC-to-gold ratio and on-chain metrics (MVRV, realized value).', lag:'1-24 hours', freq:'Continuous', url:'https://www.coindesk.com' },
+        { name:'Your brokerage (spot price)', desc:'For real-time gold and BTC spot pricing — not this tracker. This tracker has 1-6hr news lag on price data.', lag:'Real-time', freq:'Real-time', url:'#' },
+      ]
+    },
+    zh: {
+      label: '价值储存信号', verdictText: '黄金确认',
+      signal: '黄金$5,186/盎司 · BTC/黄金比值17.6倍 · 论点得到验证',
+      updated: '2026年3月13日',
+      metrics: [
+        { val:'$5,186', label:'黄金现货（新闻延迟）', change:'2025年涨约55%', dir:'down' },
+        { val:'17.6倍', label:'BTC/黄金比值（盎司）', change:'接近多年低点', dir:'neutral' },
+        { val:'755吨', label:'2026年央行购金量（估）', change:'仍处高位', dir:'down' },
+        { val:'$6000+', label:'摩根/德银/瑞银目标价', change:'瑞银上行目标：$7,200', dir:'down' },
+      ],
+      summary: `<p>2025年Q4预判的BTC/黄金背离已成确认趋势。当前一枚比特币约可兑换18盎司黄金，接近多年最低比值。亚洲主权财富基金正在持续买入黄金（哈萨克斯坦、巴西、波兰、中国领跑），而美国和阿联酋则将比特币作为储备多元化工具，但配置规模较小。</p><p>黄金从2020年历史高点2,075美元一路突破5,000美元以上，主要动力来自央行需求（价格不敏感、具结构性）以及去美元化资金流入。黄金与实际利率之间的传统反向关系已然失效——即便实际利率为正，黄金依然上涨，表明去美元化是当前的主导逻辑。</p><p>关于数据延迟：本追踪器显示的5,186美元来自新闻报道，并非实时行情。实时金价请参考您的券商或交易平台。本追踪器的黄金数据仅供方向性确认，不适合用作交易价格参考。</p>`,
+      watchList: [
+        { color:'green', text:'<strong>BTC/黄金比值</strong> — 关注是否回升至25倍以上，这将是风险偏好回暖、论点转向的信号。' },
+        { color:'green', text:'<strong>央行购金节奏</strong> — 若跌至每季度400吨以下（2022年前均值），结构性需求论点将走弱。' },
+        { color:'amber', text:'<strong>黄金ETF资金流入</strong> — 零售与机构争相涌入是周期末段动量的信号。摩根大通预计2026年流入约250吨。' },
+        { color:'amber', text:'<strong>美国加密货币立法</strong> — BTC储备法案搁置或现货ETF托管规则变化，可能重塑美国机构资金流向。' },
+      ],
+      sources: [
+        { name:'世界黄金协会', desc:'央行购金、ETF流量、各类需求的权威数据，每季度发布报告。', lag:'季度结束后6-8周', freq:'季度', url:'https://www.gold.org' },
+        { name:'摩根大通全球研究', desc:'机构黄金价格预测与需求流量分析，央行购金数据引用最广。', lag:'2-4周', freq:'持续研究', url:'https://www.jpmorgan.com/insights' },
+        { name:'ING Think — 大宗商品', desc:'黄金展望报告，涵盖央行需求、ETF及地缘政治分析。', lag:'2-4周', freq:'月度/季度', url:'https://think.ing.com' },
+        { name:'CoinDesk BTC/黄金比值', desc:'追踪BTC/黄金比值及链上指标（MVRV、已实现价值）。', lag:'1-24小时', freq:'持续更新', url:'https://www.coindesk.com' },
+        { name:'您的券商（现货价格）', desc:'实时黄金与BTC现货价格请使用券商或交易平台，本追踪器存在1-6小时新闻延迟。', lag:'实时', freq:'实时', url:'#' },
+      ]
+    }
+  },
+  china: {
+    num: '05',
+    verdict: 'caution',
+    en: {
+      label: 'China AI', verdictText: 'Gap closing',
+      signal: 'DeepSeek V4 + Qwen 3.5 — open-source frontier now competitive',
+      updated: 'March 13, 2026',
+      metrics: [
+        { val:'1T', label:'DeepSeek V4 params', change:'Launched March 2026', dir:'neutral' },
+        { val:'15%', label:'Chinese AI global share', change:'From 1% in Jan 2025', dir:'neutral' },
+        { val:'<20%', label:'Gap vs US (Qwen lead eng)', change:'"20% is optimistic"', dir:'neutral' },
+        { val:'$0.10', label:'DeepSeek V4 / 1M tokens (est)', change:'50x cheaper than GPT-5', dir:'neutral' },
+      ],
+      summary: `<p>The open-source Chinese AI dynamic is the most important structural force for your thesis. Not because China will surpass the US frontier, but because open-source Chinese models (Qwen, DeepSeek) are making enterprise AI deployment dramatically cheaper globally — which accelerates the displacement timeline regardless of who is "winning."</p><p>DeepSeek V4 launched in early March 2026: 1 trillion parameters, runs on Huawei Ascend chips (no Nvidia dependency), open source, projected at $0.10-$0.30 per 1M tokens vs $5+ for equivalent US proprietary models. Qwen 3.5 (Feb 16) is Apache 2.0 licensed — meaning any enterprise can fine-tune and deploy without licensing fees.</p><p>The Qwen lead engineer said China is "below 20% of US capability" — but that framing misses the point. At 80% of US capability for 5% of the cost, the ROI calculation flips. The displacement thesis doesn't require China to win. It just requires cheap AI to be good enough.</p>`,
+      watchList: [
+        { color:'amber', text:'<strong>Qwen/DeepSeek benchmark scores vs Claude/GPT on coding tasks</strong> — coding displacement is the fastest channel to the 100-200k cohort.' },
+        { color:'amber', text:'<strong>Export control enforcement</strong> — DeepSeek reportedly still training on smuggled Nvidia. If controls tighten hard, Chinese model pace slows.' },
+        { color:'amber', text:'<strong>Enterprise adoption of Chinese open-source models in SE Asia / UAE</strong> — directly relevant to Dubai market. Qwen already used by Airbnb.' },
+        { color:'red', text:'<strong>Distillation allegations</strong> — Anthropic/OpenAI accused DeepSeek of model distillation via 16M exchanges / 24k accounts. If proven, escalates US-China AI conflict.' },
+      ],
+      sources: [
+        { name:'Hugging Face Model Hub', desc:'Definitive source for open-weight model releases, downloads, and benchmark scores. Qwen is currently #1 most downloaded.', lag:'Real-time', freq:'Continuous', url:'https://huggingface.co' },
+        { name:'Artificial Analysis', desc:'Independent AI model benchmarking. Best independent source for cross-model performance comparison.', lag:'Days after release', freq:'Continuous', url:'https://artificialanalysis.ai' },
+        { name:'ChinaTalk Newsletter', desc:'Best English-language coverage of Chinese AI industry dynamics. Interviews engineers and executives directly.', lag:'1-2 weeks', freq:'Weekly', url:'https://www.chinatalk.media' },
+        { name:'CSIS — AI & Semiconductor Reports', desc:'Policy-level analysis on export controls, Huawei chip alternatives, and US-China AI race.', lag:'2-4 weeks', freq:'Ad hoc', url:'https://www.csis.org' },
+      ]
+    },
+    zh: {
+      label: '中国AI', verdictText: '差距收窄',
+      signal: 'DeepSeek V4 + Qwen 3.5 开源前沿已具竞争力',
+      updated: '2026年3月13日',
+      metrics: [
+        { val:'1万亿', label:'DeepSeek V4参数量', change:'2026年3月发布', dir:'neutral' },
+        { val:'15%', label:'中国AI全球份额', change:'从2025年1月的1%升至', dir:'neutral' },
+        { val:'<20%', label:'与美国的差距（Qwen首席工程师）', change:'"20%还是乐观估计"', dir:'neutral' },
+        { val:'$0.10', label:'DeepSeek V4每百万token（估）', change:'比GPT-5便宜50倍', dir:'neutral' },
+      ],
+      summary: `<p>中国开源AI的动态，是本论点中最重要的结构性力量。不是因为中国会超越美国前沿，而是因为开源的中国模型（Qwen、DeepSeek）正在大幅降低全球企业的AI部署成本——无论谁在"赢得"AI竞赛，这都会加速替代进程。</p><p>DeepSeek V4于2026年3月初发布：1万亿参数，运行于华为昇腾芯片（无需Nvidia），开源，预计每百万token费用0.10-0.30美元，而同等能力的美国专有模型收费5美元以上。Qwen 3.5（2月16日）采用Apache 2.0协议——这是最宽松的开源许可，任何企业均可免费微调和部署。</p><p>Qwen首席工程师表示中国的能力"低于美国20%"——但这种表述本身就误导了重点。以美国80%的能力、5%的成本，ROI计算结果将彻底逆转。替代论点并不需要中国赢得AI竞赛，只需廉价AI足够好用就行。</p>`,
+      watchList: [
+        { color:'amber', text:'<strong>Qwen/DeepSeek编程任务基准与Claude/GPT的对比</strong> — 编程替代是渗透10-20万美元收入群体最快的通道。' },
+        { color:'amber', text:'<strong>出口管制执法力度</strong> — DeepSeek据报仍在使用走私的Nvidia芯片训练。若管控大幅收紧，中国模型进展将放缓。' },
+        { color:'amber', text:'<strong>东南亚/阿联酋市场对中国开源模型的企业采用</strong> — 与迪拜市场直接相关，Airbnb已在使用Qwen。' },
+        { color:'red', text:'<strong>蒸馏指控</strong> — Anthropic/OpenAI指控DeepSeek通过1600万次对话交换/24,000个账户进行模型蒸馏。若坐实，将升级美中AI冲突。' },
+      ],
+      sources: [
+        { name:'Hugging Face模型库', desc:'开放权重模型发布、下载量及基准分数的权威来源。Qwen目前下载量排名第一。', lag:'实时', freq:'持续更新', url:'https://huggingface.co' },
+        { name:'Artificial Analysis', desc:'独立AI模型基准测试，跨模型性能比较的最佳独立来源。', lag:'发布后数天', freq:'持续更新', url:'https://artificialanalysis.ai' },
+        { name:'ChinaTalk通讯', desc:'最佳英文中国AI行业动态报道，直接访谈工程师与高管。', lag:'1-2周', freq:'每周', url:'https://www.chinatalk.media' },
+        { name:'战略与国际研究中心（CSIS）', desc:'出口管制、华为芯片替代方案及美中AI竞赛的政策层面分析。', lag:'2-4周', freq:'不定期', url:'https://www.csis.org' },
+      ]
+    }
+  },
+  housing: {
+    num: '06',
+    verdict: 'caution',
+    en: {
+      label: 'Housing', verdictText: 'Diverging',
+      signal: 'SF rising on AI demand · Austin/Seattle softening · leverage risk building',
+      updated: 'March 13, 2026',
+      metrics: [
+        { val:'+6.3%', label:'SF rent YoY', change:'AI job demand', dir:'down' },
+        { val:'-4.8%', label:'Austin rent YoY', change:'15,755 units under construction', dir:'up' },
+        { val:'$848k', label:'Seattle median list price', change:'Price cuts smallest in US', dir:'neutral' },
+        { val:'22', label:'Metros expected price decline', change:'Sun Belt + West', dir:'up' },
+      ],
+      summary: `<p>The housing signal is the longest-lag indicator in this tracker, which is also why it's the most important to watch early. The thesis: real estate — especially in the $800k-$2M tier in tech-hub metros — is priced on the assumption that 30-40yr olds with stable tech employment will continue to support mortgage payments and valuations. If the 100-200k cohort is structurally displaced, you get a demand-side repricing with massive embedded leverage.</p><p>Currently the market is diverging rather than collapsing. SF rents are rising because AI-adjacent jobs are being created there. Austin rents are falling from oversupply. Seattle is the most interesting: home prices haven't moved much yet, but credit metrics and tech layoff data suggest stress is building underneath.</p><p>The mechanism to watch: HELOC draws rising in tech-hub metros → credit card utilization rising → missed payments → foreclosure filings. You're currently at step 1-2 in low-income segments, not yet in prime segments.</p>`,
+      watchList: [
+        { color:'red', text:'<strong>Prime borrower 90+ day delinquency in tech-hub ZIPs</strong> — the single most important data point for your leverage thesis. Currently near historic lows.' },
+        { color:'red', text:'<strong>Days on market in $800k-$2M segment in Seattle/SF/Austin</strong> — rising DOM precedes price cuts by 3-6 months.' },
+        { color:'amber', text:'<strong>% of listings with price reductions in SF/Seattle</strong> — Redfin tracks weekly. Spike signals demand-side stress forming.' },
+        { color:'amber', text:'<strong>HELOC draw rates in California, Washington</strong> — rising draws in high-income areas = income stress in the right cohort.' },
+        { color:'green', text:'<strong>Midwest/Northeast housing demand</strong> — if people flee expensive tech hubs, Midwest markets absorb it. Confirms the thesis without the crash.' },
+      ],
+      sources: [
+        { name:'Redfin Housing Data', desc:'Best real-time housing data. Weekly updates on price cuts %, DOM, list prices by metro. Free.', lag:'~1 week', freq:'Weekly', url:'https://www.redfin.com/news/data-center/' },
+        { name:'NY Fed Liberty Street — Mortgage Delinquency', desc:'Income-quartile breakdown of mortgage delinquency by ZIP code.', lag:'6-10 weeks', freq:'Quarterly + ad hoc', url:'https://libertystreeteconomics.newyorkfed.org' },
+        { name:'CoStar / Apartments.com', desc:'Institutional-grade rental market data. Used for the SF +6.3% / Austin -4.8% figures.', lag:'2-4 weeks', freq:'Monthly', url:'https://www.costar.com' },
+        { name:'Realtor.com Housing Forecast', desc:'Metro-level home price forecasts. Identified 22 metros at risk of price decline in 2026.', lag:'1-2 months', freq:'Quarterly', url:'https://www.realtor.com/research/' },
+        { name:'Wolf Street (Wolf Richter)', desc:'Independent analyst. Best coverage of SF/Bay Area price divergence and tech employment linkage.', lag:'1-2 weeks', freq:'Continuous', url:'https://wolfstreet.com' },
+      ]
+    },
+    zh: {
+      label: '房地产', verdictText: '分化走势',
+      signal: '旧金山因AI需求上涨 · 奥斯汀/西雅图趋软 · 杠杆风险积累',
+      updated: '2026年3月13日',
+      metrics: [
+        { val:'+6.3%', label:'旧金山租金同比', change:'AI就业需求拉动', dir:'down' },
+        { val:'-4.8%', label:'奥斯汀租金同比', change:'在建单元15,755套', dir:'up' },
+        { val:'$848k', label:'西雅图挂牌中位价', change:'降价比例全美最低', dir:'neutral' },
+        { val:'22个', label:'预计房价下滑的都会区', change:'阳光地带 + 西部', dir:'up' },
+      ],
+      summary: `<p>房地产是本追踪器中数据延迟最长的指标，这也正是需要尽早关注的原因。论点核心：房地产——尤其是科技中心都市中80万至200万美元价位段——的定价建立在30-40岁人群稳定就业的假设之上。一旦10-20万美元收入群体遭到结构性替代，就会引发需求侧重估，而其背后承载着巨大的杠杆敞口。</p><p>目前市场呈分化态势，而非整体崩盘。旧金山租金上涨，因为AI相关岗位正在该地聚集；奥斯汀租金下跌，源于供给过剩；西雅图最值得关注——房价尚未明显移动，但信贷数据和科技裁员数据显示压力正在积蓄。</p><p>需关注的传导链：科技中心都市HELOC提款上升 → 信用卡使用率上升 → 开始违约 → 止赎申请。目前这一进程在低收入群体中处于第1-2步，尚未波及优质借款人群体。</p>`,
+      watchList: [
+        { color:'red', text:'<strong>科技中心邮编区优质借款人90天以上违约率</strong> — 您杠杆论点中最关键的单一数据点，目前仍接近历史低点。' },
+        { color:'red', text:'<strong>西雅图/旧金山/奥斯汀80-200万美元价位段挂牌天数</strong> — 在售天数上升通常领先于实际降价3-6个月。' },
+        { color:'amber', text:'<strong>旧金山/西雅图挂牌房源降价比例</strong> — Redfin每周追踪。骤升意味着需求侧压力正在形成。' },
+        { color:'amber', text:'<strong>加州、华盛顿州HELOC提款率</strong> — 高收入地区提款上升 = 目标群体出现收入压力。' },
+        { color:'green', text:'<strong>中西部/东北部住房需求</strong> — 若人口从昂贵的科技中心外流，中西部市场将承接。这是论点得到验证但未引发崩盘的情形。' },
+      ],
+      sources: [
+        { name:'Redfin住房数据', desc:'最佳实时住房数据，每周按都会区更新降价比例、在售天数及挂牌价格，免费获取。', lag:'约1周', freq:'每周', url:'https://www.redfin.com/news/data-center/' },
+        { name:'纽约联储自由街 — 抵押贷款违约', desc:'按邮编划分的收入四分位数抵押贷款违约率分解数据。', lag:'6-10周', freq:'季度 + 不定期', url:'https://libertystreeteconomics.newyorkfed.org' },
+        { name:'CoStar / Apartments.com', desc:'机构级租赁市场数据，旧金山+6.3%和奥斯汀-4.8%数据来源。', lag:'2-4周', freq:'每月', url:'https://www.costar.com' },
+        { name:'Realtor.com住房预测', desc:'都会区房价预测，已识别出2026年22个面临价格下滑风险的都会区。', lag:'1-2个月', freq:'季度', url:'https://www.realtor.com/research/' },
+        { name:'Wolf Street（Wolf Richter）', desc:'独立分析师，对旧金山湾区价格分化与科技就业关联的报道最为深入。', lag:'1-2周', freq:'持续更新', url:'https://wolfstreet.com' },
+      ]
+    }
+  }
+};
+
+// ─── STATE ──────────────────────────────────────────────────────────
+let lang = 'en';
+let currentSignal = null;
+
+// ─── LANGUAGE SWITCH ────────────────────────────────────────────────
+function setLang(l) {
+  lang = l;
+  document.getElementById('btn-en').classList.toggle('active', l === 'en');
+  document.getElementById('btn-zh').classList.toggle('active', l === 'zh');
+  document.body.classList.toggle('zh', l === 'zh');
+
+  const t = T[l];
+  document.getElementById('txt-eyebrow').textContent = t.eyebrow;
+  document.getElementById('txt-h1').innerHTML = t.h1;
+  document.getElementById('txt-subtitle').textContent = t.subtitle;
+  document.getElementById('txt-thesis').innerHTML = t.thesis;
+  document.getElementById('txt-section-label').textContent = t.sectionLabel;
+  document.getElementById('txt-details').textContent = t.details;
+
+  // Update all card text
+  ['employment','credit','ai','sov','china','housing'].forEach((id, i) => {
+    const n = String(i+1).padStart(2,'0');
+    const c = t.cards[id];
+    document.getElementById(`cl-0${i+1}`).textContent = c.label;
+    document.getElementById(`cv-0${i+1}`).textContent = c.verdict;
+    document.getElementById(`cs-0${i+1}`).innerHTML = c.signal;
+    document.getElementById(`cd-0${i+1}`).innerHTML = c.detail;
+    document.getElementById(`lag-0${i+1}`).textContent = t.lagPrefix + ' ' + c.lag;
+  });
+
+  // Update all expand hints (cards 2-6 use class)
+  document.querySelectorAll('.txt-details-ref').forEach(el => {
+    el.textContent = t.details;
+  });
+
+  // Re-render detail page if open
+  if (currentSignal) showDetail(currentSignal);
+}
+
+// ─── DETAIL VIEW ─────────────────────────────────────────────────────
+function showDetail(id) {
+  const s = SIGNALS[id];
+  currentSignal = id;
+  const d = s[lang];
+  const t = T[lang];
+
+  const metricsHTML = d.metrics.map(m => `
+    <div class="metric">
+      <div class="metric-val">${m.val}</div>
+      <div class="metric-label">${m.label}</div>
+      <div class="metric-change ${m.dir}">${m.change}</div>
+    </div>`).join('');
+
+  const watchHTML = d.watchList.map(w => `
+    <div class="watch-item">
+      <div class="watch-dot ${w.color}"></div>
+      <div>${w.text}</div>
+    </div>`).join('');
+
+  const sourcesHTML = d.sources.map(src => `
+    <div class="source-row">
+      <div>
+        <div class="source-name">${src.name}</div>
+        <div class="source-desc">${src.desc}</div>
+        ${src.url !== '#' ? `<a class="source-link" href="${src.url}" target="_blank">↗ ${src.url.replace('https://','').replace('http://','').split('/')[0]}</a>` : ''}
+      </div>
+      <div class="source-meta">
+        <span class="source-lag">${src.lag}</span>
+        <span class="source-freq">${src.freq}</span>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('detail-content').innerHTML = `
+    <button class="back-btn" onclick="hideDetail()"><span class="back-arrow">←</span> ${t.backBtn.replace('← ','')}</button>
+    <div class="detail-eyebrow">${lang === 'zh' ? '信号' : 'Signal'} ${s.num} · ${d.label}</div>
+    <div class="detail-title">${d.signal}</div>
+    <div class="detail-verdict-row">
+      <span class="detail-verdict ${s.verdict}">${d.verdictText}</span>
+      <span class="detail-updated">${t.updated} ${d.updated}</span>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">${t.keyMetrics}</div>
+      <div class="metrics-row">${metricsHTML}</div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">${t.analysis}</div>
+      <div class="detail-body">${d.summary}</div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">${t.whatToWatch}</div>
+      <div class="watch-list">${watchHTML}</div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">${t.sources}</div>
+      <div class="sources-grid">${sourcesHTML}</div>
+    </div>
+  `;
+
+  document.getElementById('detail').scrollTop = 0;
+  document.getElementById('dashboard').classList.add('hidden');
+  document.getElementById('detail').classList.add('visible');
+}
+
+function hideDetail() {
+  document.getElementById('dashboard').classList.remove('hidden');
+  document.getElementById('detail').classList.remove('visible');
+  currentSignal = null;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && currentSignal) hideDetail();
+});
+</script>
+</body>
+</html>
