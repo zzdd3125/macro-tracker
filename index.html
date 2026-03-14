@@ -101,7 +101,7 @@ h1 span{color:var(--gold)}
 .watch-item strong{color:var(--text);font-weight:400}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .card{animation:fadeUp .4s ease both}
-.card:nth-child(1){animation-delay:.05s}.card:nth-child(2){animation-delay:.1s}.card:nth-child(3){animation-delay:.15s}.card:nth-child(4){animation-delay:.2s}.card:nth-child(5){animation-delay:.25s}.card:nth-child(6){animation-delay:.3s}
+.card:nth-child(1){animation-delay:.05s}.card:nth-child(2){animation-delay:.1s}.card:nth-child(3){animation-delay:.15s}.card:nth-child(4){animation-delay:.2s}.card:nth-child(5){animation-delay:.25s}.card:nth-child(6){animation-delay:.3s}.card:nth-child(7){animation-delay:.35s}.card:nth-child(8){animation-delay:.4s}
 </style>
 </head>
 <body>
@@ -175,6 +175,22 @@ h1 span{color:var(--gold)}
       <div class="card-footer"><span class="lag-tag" id="lag-h">DATA LAG: 1-8 weeks</span><span class="expand-hint" id="exp-h">details <span class="expand-arrow">→</span></span></div>
     </div>
 
+    <div class="card bear" onclick="showDetail('energy')">
+      <div class="card-top"><div class="card-label" id="lbl-en">07 · Energy / Hormuz</div><span class="verdict bear" id="vrd-en">Critical</span></div>
+      <div class="card-signal" id="sig-en">Dubai physical $138/bbl · $40 over Brent futures · strait functionally impaired</div>
+      <div class="card-detail" id="det-en">Dubai physical swaps <strong>$138/bbl</strong> vs Brent futures <strong>$100/bbl</strong>. $40 spread = regional supply panic. Tankers avoiding strait or demanding extreme war risk premiums.</div>
+      <div class="signal-bar"><div class="signal-bar-fill" style="width:92%;background:var(--red)"></div></div>
+      <div class="card-footer"><span class="lag-tag" id="lag-en">DATA LAG: real-time (Bloomberg)</span><span class="expand-hint" id="exp-en">details <span class="expand-arrow">→</span></span></div>
+    </div>
+
+    <div class="card bear" onclick="showDetail('talent')">
+      <div class="card-top"><div class="card-label" id="lbl-t">08 · Talent Pipeline</div><span class="verdict bear" id="vrd-t">Broken</span></div>
+      <div class="card-signal" id="sig-t">Entry-level postings -35% since Jan 2023 · New grad unemployment 5.7% · Only 30% employed in field</div>
+      <div class="card-detail" id="det-t">Senior + AI replacing junior. <strong>73%</strong> drop in P1/P2 hiring rates. New grads at major tech firms: <strong>7%</strong> of hires vs 14% pre-pandemic. Vacancy chain broken.</div>
+      <div class="signal-bar"><div class="signal-bar-fill" style="width:82%;background:var(--red)"></div></div>
+      <div class="card-footer"><span class="lag-tag" id="lag-t">DATA LAG: monthly (NY Fed) / weekly (Indeed)</span><span class="expand-hint" id="exp-t">details <span class="expand-arrow">→</span></span></div>
+    </div>
+
   </div>
 </div>
 
@@ -206,6 +222,8 @@ const UI = {
       s:  { lbl:'04 · SoV Signals',  vrd:'Gold confirmed',sig:'Gold $5,186/oz · BTC/gold ratio 17.6x', det:'Gold up <strong>~55%</strong> in 2025. Central banks buying <strong>~755 tonnes</strong> in 2026. BTC/gold ratio near multi-year low.', lag:'DATA LAG: 1-6 hours (news)', exp:'details' },
       ch: { lbl:'05 · China AI',     vrd:'Gap closing',   sig:'DeepSeek V4 + Qwen 3.5 — open-source frontier competitive', det:'Chinese open models: <strong>1% → 15%</strong> global share in 12 months. DeepSeek V4 launched March 2026 — 1T params, Huawei chips.', lag:'DATA LAG: days–months', exp:'details' },
       h:  { lbl:'06 · Housing',      vrd:'Diverging',     sig:'SF rising on AI demand · Austin/Seattle softening', det:'SF rents <strong>+6.3%</strong> YoY. Austin <strong>-4.8%</strong>. 22 metros expected to see declines. Premium segment seeing concessions not yet cuts.', lag:'DATA LAG: 1-8 weeks', exp:'details' },
+      en: { lbl:'07 · Energy / Hormuz', vrd:'Critical',   sig:'Dubai physical $138/bbl · $40 over Brent futures · strait functionally impaired', det:'Dubai physical swaps <strong>$138/bbl</strong> vs Brent futures <strong>$100/bbl</strong>. $40 spread = regional supply panic. Tankers avoiding strait or demanding extreme war risk premiums.', lag:'DATA LAG: real-time (Bloomberg)', exp:'details' },
+      t:  { lbl:'08 · Talent Pipeline', vrd:'Broken',      sig:'Entry-level postings -35% since Jan 2023 · New grad unemployment 5.7% · Only 30% employed in field', det:'Senior + AI replacing junior. <strong>73%</strong> drop in P1/P2 hiring rates. New grads at major tech firms: <strong>7%</strong> of hires vs 14% pre-pandemic. Vacancy chain broken.', lag:'DATA LAG: monthly (NY Fed) / weekly (Indeed)', exp:'details' },
     }
   },
   zh: {
@@ -229,6 +247,8 @@ const UI = {
       s:  { lbl:'04 · 价值储存信号',vrd:'黄金确认',sig:'黄金5,186美元/盎司 · BTC/黄金比17.6倍', det:'黄金2025年涨幅约<strong>55%</strong>。各国央行2026年购金约<strong>755吨</strong>。BTC/黄金比率接近多年低点。', lag:'数据滞后：1-6小时（新闻）', exp:'详情' },
       ch: { lbl:'05 · 中国AI',     vrd:'差距收窄',sig:'DeepSeek V4 + Qwen 3.5——开源前沿已具竞争力', det:'中国开源模型全球份额：12个月内从<strong>1%升至15%</strong>。DeepSeek V4于2026年3月发布——万亿参数，华为芯片。', lag:'数据滞后：数天至数月', exp:'详情' },
       h:  { lbl:'06 · 房地产',     vrd:'分化',    sig:'旧金山因AI需求上涨 · 奥斯汀/西雅图趋软', det:'旧金山租金同比<strong>+6.3%</strong>。奥斯汀<strong>-4.8%</strong>。预计22个都市区将出现价格下跌。高端市场出现让步，但尚未正式降价。', lag:'数据滞后：1-8周', exp:'详情' },
+      en: { lbl:'07 · 能源/霍尔木兹', vrd:'危急',  sig:'迪拜实物原油138美元/桶 · 较布伦特期货溢价40美元 · 海峡功能性受阻', det:'迪拜实物掉期<strong>138美元/桶</strong>，布伦特期货<strong>100美元/桶</strong>。40美元价差=区域供应恐慌。油轮回避海峡或索取极高战争风险溢价。', lag:'数据滞后：实时（彭博终端）', exp:'详情' },
+      t:  { lbl:'08 · 人才管道', vrd:'断裂',  sig:'初级职位发布量自2023年1月下降35% · 应届毕业生失业率5.7% · 仅30%在本专业就业', det:'高级+AI正在取代初级岗位。P1/P2招聘率下降<strong>73%</strong>。主要科技公司应届毕业生占新员工比例：<strong>7%</strong>，疫情前为14%。职业晋升链已断裂。', lag:'数据滞后：每月（纽约联储）/ 每周（Indeed）', exp:'详情' },
     }
   }
 };
@@ -417,6 +437,87 @@ const SIGNALS = {
       {name:'Realtor.com Housing Forecast',desc:{en:'Metro-level forecasts. Identified 22 metros at risk in 2026.',zh:'都市区级别房价预测，识别出2026年22个面临风险的都市区。'},lag:'1-2 months',freq:{en:'Quarterly',zh:'每季度'},url:'https://www.realtor.com/research/'},
       {name:'Wolf Street (Wolf Richter)',desc:{en:'Independent analyst. Best coverage of SF/Bay Area price divergence.',zh:'独立分析师，最深入的旧金山/湾区价格分化报道。'},lag:'1-2 weeks',freq:{en:'Continuous',zh:'持续'},url:'https://wolfstreet.com'},
     ]
+  },
+  energy: {
+    num:'07', key:'en', verdict:'bear',
+    label:{en:'Energy / Hormuz',zh:'能源/霍尔木兹'},
+    verdictText:{en:'Critical',zh:'危急'},
+    signal:{en:'Dubai physical $138/bbl · $40 over Brent futures · strait functionally impaired',zh:'迪拜实物原油138美元/桶 · 较布伦特期货溢价40美元 · 海峡功能性受阻'},
+    updated:{en:'March 13, 2026',zh:'2026年3月13日'},
+    metrics:[
+      {val:'$138',label:{en:'Dubai physical crude ($/bbl)',zh:'迪拜实物原油（美元/桶）'},change:{en:'Bloomberg FSDUM0 Index',zh:'彭博FSDUM0指数'},dir:'up'},
+      {val:'$100',label:{en:'Brent prompt futures ($/bbl)',zh:'布伦特近月期货（美元/桶）'},change:{en:'Bloomberg CO1 Comdty',zh:'彭博CO1 Comdty'},dir:'up'},
+      {val:'$40',label:{en:'Physical vs futures spread',zh:'实物与期货价差'},change:{en:'Extreme — historic anomaly',zh:'极端——历史罕见'},dir:'up'},
+      {val:'>1,000',label:{en:'Iranian drones/missiles launched at UAE',zh:'伊朗向阿联酋发射无人机/导弹数量'},change:{en:'95%+ intercepted by air defense',zh:'防空系统拦截率95%以上'},dir:'up'},
+    ],
+    summary:{
+      en:`<p>The Dubai physical vs Brent futures spread is the single clearest real-time signal of Hormuz stress. Under normal conditions, Dubai physical crude and Brent futures trade within $1-2 of each other. A $40 spread means buyers in the region cannot source barrels at any reasonable price — either tankers won't transit the strait or are demanding war risk premiums that make economics unworkable.</p><p>This is not a paper market reaction. Futures traders can roll contracts without taking delivery. Physical buyers — refiners, utilities, strategic reserve managers — need actual barrels and are paying whatever it takes. The $40 premium represents real supply dislocation, not sentiment.</p><p>For your UAE position: Hormuz carries roughly 20% of global oil and 25-30% of global LNG. The UAE is both a major exporter through the strait and an importer of refined products. A sustained impairment hits the UAE economy from both sides — export revenue disruption and imported inflation simultaneously.</p><p>The formal escalation trigger for your war digest is Hormuz closure. This is not a closure — it is functional impairment. The distinction matters: a formal closure would be a military/political declaration; functional impairment means commercial shipping has already self-deterred, which is arguably worse because it happens gradually and without a clear resolution mechanism.</p>`,
+      zh:`<p>迪拜实物原油与布伦特期货的价差是霍尔木兹压力最直接的实时信号。正常情况下，两者价差在1至2美元之间。40美元的价差意味着区域买家无法以任何合理价格采购实物原油——要么油轮拒绝通过海峡，要么开出的战争风险溢价使经济上根本无法接受。</p><p>这不是纸面市场的情绪反应。期货交易者可以不接货滚仓。而实物买家——炼厂、电力公司、战略储备管理者——需要实实在在的原油桶，愿意付出任何代价。40美元的溢价代表的是真实的供应错位，而非情绪波动。</p><p>就您的阿联酋头寸而言：霍尔木兹承载全球约20%的石油贸易和25-30%的液化天然气贸易。阿联酋既是通过该海峡的主要出口国，也是成品油的进口方。持续的海峡受阻将从两端同时冲击阿联酋经济——出口收入中断与输入性通胀并发。</p><p>您战争摘要的正式升级触发条件是霍尔木兹封锁。目前尚未封锁——是功能性受阻。这一区别至关重要：正式封锁是军事/政治宣告；功能性受阻意味着商业航运已自行回避，这实际上更难处理，因为它是渐进发生的，没有明确的解决机制。</p>`
+    },
+    watchList:[
+      {color:'red',text:{en:'<strong>Dubai physical vs Brent spread widening beyond $50</strong> — formal supply crisis threshold. Triggers immediate portfolio review.',zh:'<strong>迪拜实物与布伦特价差扩大至50美元以上</strong>——正式供应危机门槛，触发立即投资组合审查。'}},
+      {color:'red',text:{en:'<strong>Tanker AIS dark zones near Hormuz</strong> — ships turning off transponders = active avoidance. Bloomberg or MarineTraffic.',zh:'<strong>霍尔木兹附近油轮AIS信号消失区域</strong>——船只关闭应答机=主动规避，可查彭博或MarineTraffic。'}},
+      {color:'red',text:{en:'<strong>UAE strategic petroleum reserve drawdown announcements</strong> — government confirming supply stress.',zh:'<strong>阿联酋战略石油储备动用公告</strong>——政府确认供应紧张。'}},
+      {color:'amber',text:{en:'<strong>Brent/WTI spread</strong> — widening signals US market decoupling from Gulf crisis; narrowing means contagion spreading globally.',zh:'<strong>布伦特/WTI价差</strong>——扩大意味着美国市场与海湾危机脱钩；收窄则表明危机向全球蔓延。'}},
+      {color:'amber',text:{en:'<strong>UAE CPI monthly</strong> — energy import costs pass through to inflation within 4-8 weeks.',zh:'<strong>阿联酋CPI月度数据</strong>——能源进口成本在4至8周内传导至通胀。'}},
+    ],
+    sources:[
+      {name:'⚡ Bloomberg FSDUM0 Index',desc:{en:'Dubai crude physical swap, balance of month. The primary signal. Requires Bloomberg terminal access.',zh:'迪拜原油实物掉期，当月结算价。核心信号，需彭博终端访问权限。'},lag:'Real-time',freq:{en:'Continuous',zh:'持续'},url:'https://www.bloomberg.com/quote/FSDUM0:IND'},
+      {name:'⚡ Bloomberg CO1 Comdty',desc:{en:'Brent crude prompt futures. Pair with FSDUM0 for the spread.',zh:'布伦特原油近月期货，与FSDUM0配对计算价差。'},lag:'Real-time',freq:{en:'Continuous',zh:'持续'},url:'https://www.bloomberg.com/quote/CO1:COM'},
+      {name:'📊 MarineTraffic / VesselsValue',desc:{en:'Tanker tracking. Watch for AIS gaps near Hormuz strait — ships going dark = avoidance behavior.',zh:'油轮追踪平台。关注霍尔木兹附近AIS信号缺口——船只消失=主动规避行为。'},lag:'~15 min',freq:{en:'Continuous',zh:'持续'},url:'https://www.marinetraffic.com'},
+      {name:'📊 EIA Weekly Petroleum Status',desc:{en:'US inventory and import data. Hormuz disruption shows up as import cost spike and inventory drawdown within 2-3 weeks.',zh:'美国每周石油库存与进口数据。霍尔木兹中断将在2至3周内体现为进口成本飙升和库存下降。'},lag:'~1 week',freq:{en:'Weekly',zh:'每周'},url:'https://www.eia.gov/petroleum/supply/weekly/'},
+      {name:'🐢 UAE Federal Competitiveness Authority',desc:{en:'Official UAE energy statistics. Slowest but authoritative source for domestic energy impact.',zh:'阿联酋官方能源统计，最慢但具权威性，反映国内能源影响。'},lag:'4-8 weeks',freq:{en:'Monthly',zh:'每月'},url:'https://fcsa.gov.ae'},
+    ]
+  },
+  talent: {
+    num:'08', key:'t', verdict:'bear',
+    label:{en:'Talent Pipeline',zh:'人才管道'},
+    verdictText:{en:'Broken',zh:'断裂'},
+    signal:{en:'Entry-level postings -35% since Jan 2023 · New grad unemployment 5.7% · Only 30% employed in field',zh:'初级职位发布量自2023年1月下降35% · 应届毕业生失业率5.7% · 仅30%在本专业就业'},
+    updated:{en:'March 13, 2026',zh:'2026年3月13日'},
+    metrics:[
+      {val:'-35%',label:{en:'Entry-level postings since Jan 2023',zh:'初级职位发布量（自2023年1月）'},change:{en:'Revelio Labs data',zh:'Revelio Labs数据'},dir:'up'},
+      {val:'5.7%',label:{en:'New grad unemployment Q4 2025',zh:'应届毕业生失业率（2025年Q4）'},change:{en:'vs 4.0% overall — historic reversal',zh:'全体劳动者为4.0%——历史性逆转'},dir:'up'},
+      {val:'42.5%',label:{en:'New grad underemployment rate',zh:'应届毕业生就业不足率'},change:{en:'Highest since 2020 (NY Fed)',zh:'2020年以来最高（纽约联储）'},dir:'up'},
+      {val:'30%',label:{en:'Grads employed in their field',zh:'在本专业就业的毕业生比例'},change:{en:'Down from 41% in 2024',zh:'从2024年的41%下降'},dir:'up'},
+    ],
+    chart:{
+      title:{en:'Entry-Level Hiring Rate — New Grads at Major Tech Firms (% of new hires)',zh:'初级岗位招聘率——主要科技公司应届毕业生占新员工比例（%）'},
+      data:[
+        {year:'2021',val:14,label:'14%'},
+        {year:'2022',val:11,label:'11%'},
+        {year:'2023',val:9,label:'9%'},
+        {year:'2024',val:7.5,label:'7.5%'},
+        {year:'2025',val:7,label:'7%'},
+      ],
+      data2:[
+        {year:'2021',val:8.7,label:'8.7%'},
+        {year:'2022',val:8.7,label:'8.7%'},
+        {year:'2023',val:6.5,label:'6.5%'},
+        {year:'2024',val:5.8,label:'5.8%'},
+        {year:'2025',val:4.8,label:'4.8%'},
+      ],
+      legend:{en:['New grad % of tech hires','New grad hiring rate (Gusto)'],zh:['科技公司应届生占比','应届生招聘率（Gusto）']},
+    },
+    summary:{
+      en:`<p>The talent pipeline collapse is the upstream signal of your core thesis — it starts 3-5 years before the 100-200k displacement becomes visible in unemployment data. Today's college grads who can't get entry-level roles are the same people who were supposed to become your 100-200k cohort by 2028-2030. The pipeline is broken before it fills.</p><p>The mechanism is structural, not cyclical. Senior + AI has replaced the junior role entirely in knowledge work. <strong>Why hire a junior at $90K when GitHub Copilot costs $10?</strong> Companies aren't hiring fewer people total — they're hiring more experienced people and skipping the bottom rung. Entry-level tech postings are down 60% from 2022 to 2024. Google and Meta hiring ~50% fewer new grads vs 2021. Salesforce announced zero new engineers in 2025.</p><p>The "vacancy chain" is broken: in a healthy market, a senior leaves → mid-level moves up → junior gets hired. AI automates the bottom link, so the chain never starts. This means no new mid-level talent is being developed. The consequence isn't visible for 3-5 years — then suddenly companies have no internal pipeline for senior roles and face expensive external recruiting for a cohort that barely exists.</p>`,
+      zh:`<p>人才管道的断裂是核心论点的上游信号——它比10-20万美元岗位替代在失业率数据中显现，要早3至5年。如今无法找到初级岗位的应届毕业生，正是本应在2028至2030年成为10-20万美元核心群体的那批人。管道在填满之前就已断裂。</p><p>这是结构性问题，而非周期性问题。高级员工+AI已在知识工作领域完全取代了初级岗位。<strong>"与其花9万美元雇一个初级员工，不如花10美元用GitHub Copilot"</strong>——这已成为企业的现实逻辑。企业总体招聘人数并未减少，而是倾向于招募更有经验的人才，直接跳过最底层。科技行业初级职位发布量从2022年到2024年下降了60%。谷歌和Meta招募的应届毕业生比2021年减少约50%。Salesforce宣布2025年零新招工程师。</p><p>"职位晋升链"已经断裂：在健康的劳动力市场中，高级员工离职→中级晋升→初级入职，链条得以运转。而AI自动化了底层环节，链条永远无法启动。这意味着没有新的中级人才正在被培养。这一后果在3至5年内不会显现——然后企业突然发现，内部已经没有晋升为高级职位的储备人才，只能以高昂成本对外招聘一个几乎不存在的群体。</p>`
+    },
+    watchList:[
+      {color:'red',text:{en:'<strong>NY Fed new grad unemployment rate</strong> — monthly, tracks 22-27 year olds specifically. Crossing 6% = structural threshold, not cyclical.',zh:'<strong>纽约联储应届毕业生失业率</strong>——每月发布，专门追踪22至27岁群体。突破6%=结构性门槛，而非周期性波动。'}},
+      {color:'red',text:{en:'<strong>Indeed entry-level postings — $40k-$80k band in software/finance/consulting</strong> — weekly. This is the ground truth on whether the bottom rung exists.',zh:'<strong>Indeed初级职位发布量——软件/金融/咨询行业4万至8万美元薪资段</strong>——每周更新。这是初级职位是否存在的真实依据。'}},
+      {color:'amber',text:{en:'<strong>Handshake hiring report — job offers per graduating senior</strong> — quarterly. Direct pipeline signal. Declining offers-per-grad = demand destruction, not supply increase.',zh:'<strong>Handshake招聘报告——每位应届毕业生的工作邀约数量</strong>——每季度发布。直接管道信号。邀约数量下降=需求萎缩，而非供给增加。'}},
+      {color:'amber',text:{en:'<strong>SignalFire new grad % of tech hires</strong> — annual. Watch for sub-5% reading. Below that, companies have effectively stopped building a junior pipeline.',zh:'<strong>SignalFire应届毕业生在科技公司新员工中的占比</strong>——每年发布。关注是否跌破5%。低于该水平意味着企业已实际停止培育初级人才管道。'}},
+      {color:'green',text:{en:'<strong>AI/ML role hiring surge</strong> — if entry-level AI roles grow faster than traditional roles decline, thesis softens. Machine learning engineers up 40% in 2025.',zh:'<strong>AI/ML岗位招聘激增</strong>——若初级AI岗位的增速超过传统岗位的下降速度，论点力度将减弱。2025年机器学习工程师职位增长40%。'}},
+    ],
+    sources:[
+      {name:'⚡ NY Fed College Labor Market Tracker',desc:{en:'Best monthly data. Tracks unemployment AND underemployment for 22-27 year olds with degrees. Free. Your primary monthly signal.',zh:'最佳月度数据。追踪22至27岁学历人群的失业率和就业不足率。免费。您的核心月度信号。'},lag:'~1 month',freq:{en:'Monthly',zh:'每月'},url:'https://www.newyorkfed.org/research/college-labor-market'},
+      {name:'⚡ Indeed Job Postings Tracker',desc:{en:'Weekly entry-level posting volume by sector and salary band. Filter for $40k-$80k in software, finance, consulting. Free.',zh:'按行业和薪资段划分的每周初级职位发布量。筛选软件、金融、咨询行业4万至8万美元薪资段。免费。'},lag:'~1 week',freq:{en:'Weekly',zh:'每周'},url:'https://www.indeed.com/hiring/hiring-lab'},
+      {name:'📊 Gusto New Grad Hiring Report',desc:{en:'Actual payroll data on 20-24 year old hiring rates. Not survey-based — real hiring. Quarterly releases with monthly updates.',zh:'基于真实薪资数据的20至24岁招聘率。非问卷调查——反映实际招聘情况。每季度发布，每月更新。'},lag:'~1 month',freq:{en:'Quarterly',zh:'每季度'},url:'https://gusto.com/resources/gusto-insights'},
+      {name:'📊 Handshake Hiring Report',desc:{en:'New grad specific. Tracks job offers per senior, application-to-offer ratios, and hiring by major. Quarterly.',zh:'专注应届毕业生。追踪每位应届生的工作邀约数量、投递转化率及各专业招聘情况。每季度发布。'},lag:'~6 weeks',freq:{en:'Quarterly',zh:'每季度'},url:'https://joinhandshake.com/research/'},
+      {name:'📊 NACE Job Outlook',desc:{en:'Employer hiring intentions for college grads. Leading indicator — surveys employers 6 months ahead. Free.',zh:'雇主对应届毕业生的招聘意向。领先指标——提前6个月调查雇主。免费。'},lag:'~6 months ahead',freq:{en:'Quarterly',zh:'每季度'},url:'https://www.naceweb.org/job-market/trends-and-predictions/'},
+      {name:'🐢 SignalFire State of Tech Talent',desc:{en:'Tracks new grad % of hires at 80M+ organizations. Annual but most comprehensive dataset on seniority shift.',zh:'追踪8000万以上机构应届毕业生招聘占比。每年发布，但是关于资历层级变化最全面的数据集。'},lag:'~3-6 months',freq:{en:'Annual',zh:'每年'},url:'https://signalfire.com/'},
+    ]
   }
 };
 
@@ -450,12 +551,49 @@ function showDetail(id){
   const metricsHTML=s.metrics.map(m=>`<div class="metric"><div class="metric-val">${m.val}</div><div class="metric-label">${t(m.label)}</div><div class="metric-change ${m.dir}">${t(m.change)}</div></div>`).join('');
   const watchHTML=s.watchList.map(w=>`<div class="watch-item"><div class="watch-dot ${w.color}"></div><div>${t(w.text)}</div></div>`).join('');
   const sourcesHTML=s.sources.map(src=>`<div class="source-row"><div><div class="source-name">${t(src.name)}</div><div class="source-desc">${t(src.desc)}</div>${src.url!=='#'?`<a class="source-link" href="${src.url}" target="_blank">↗ ${src.url.replace('https://','').split('/')[0]}</a>`:''}</div><div class="source-meta"><span class="source-lag">${src.lag}</span><span class="source-freq">${t(src.freq)}</span></div></div>`).join('');
+
+  let chartHTML = '';
+  if(s.chart){
+    const c=s.chart;
+    const max1=Math.max(...c.data.map(d=>d.val));
+    const max2=c.data2?Math.max(...c.data2.map(d=>d.val)):0;
+    const maxVal=Math.max(max1,max2,1);
+    const bars1=c.data.map(d=>`
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+        <div style="font-size:10px;color:var(--red);font-weight:600">${d.label}</div>
+        <div style="width:100%;background:var(--red);opacity:0.85;height:${Math.max(4,Math.round((d.val/maxVal)*120))}px;border-radius:3px 3px 0 0;transition:height .4s"></div>
+        <div style="font-size:11px;color:var(--muted)">${d.year}</div>
+      </div>`).join('');
+    const bars2=c.data2?c.data2.map(d=>`
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+        <div style="font-size:10px;color:var(--amber);font-weight:600">${d.label}</div>
+        <div style="width:100%;background:var(--amber);opacity:0.75;height:${Math.max(4,Math.round((d.val/maxVal)*120))}px;border-radius:3px 3px 0 0;transition:height .4s"></div>
+        <div style="font-size:11px;color:var(--muted)">${d.year}</div>
+      </div>`).join(''):'';
+    const leg=t(c.legend);
+    const legendHTML=`<div style="display:flex;gap:16px;margin-top:10px;font-size:11px;color:var(--muted)">
+      <span><span style="display:inline-block;width:10px;height:10px;background:var(--red);border-radius:2px;margin-right:4px;opacity:0.85"></span>${leg[0]}</span>
+      ${c.data2?`<span><span style="display:inline-block;width:10px;height:10px;background:var(--amber);border-radius:2px;margin-right:4px;opacity:0.75"></span>${leg[1]}</span>`:''}
+    </div>`;
+    chartHTML=`<div class="detail-section">
+      <div class="detail-section-title">${t(c.title)}</div>
+      <div style="margin-top:12px">
+        ${c.data2?`<div style="font-size:11px;color:var(--muted);margin-bottom:8px">${leg[0]}</div>`:''}
+        <div style="display:flex;align-items:flex-end;gap:6px;height:140px;border-bottom:1px solid var(--border);padding-bottom:0">${bars1}</div>
+        ${c.data2?`<div style="font-size:11px;color:var(--muted);margin:14px 0 8px">${leg[1]}</div>
+        <div style="display:flex;align-items:flex-end;gap:6px;height:100px;border-bottom:1px solid var(--border);padding-bottom:0">${bars2}</div>`:''}
+        ${legendHTML}
+      </div>
+    </div>`;
+  }
+
   document.getElementById('detail-content').innerHTML=`
     <button class="back-btn" onclick="hideDetail()">← ${currentLang==='zh'?'返回所有信号':'All signals'}</button>
     <div class="detail-eyebrow">${currentLang==='zh'?'信号':'Signal'} ${s.num} · ${t(s.label)}</div>
     <div class="detail-title">${t(s.signal)}</div>
     <div class="detail-verdict-row"><span class="detail-verdict ${s.verdict}">${t(s.verdictText)}</span><span class="detail-updated">${currentLang==='zh'?'更新于':'Updated'} ${t(s.updated)}</span></div>
     <div class="detail-section"><div class="detail-section-title">${currentLang==='zh'?'关键指标':'Key metrics'}</div><div class="metrics-row">${metricsHTML}</div></div>
+    ${chartHTML}
     <div class="detail-section"><div class="detail-section-title">${currentLang==='zh'?'分析':'Analysis'}</div><div class="detail-body">${t(s.summary)}</div></div>
     <div class="detail-section"><div class="detail-section-title">${currentLang==='zh'?'重点关注':'What to watch'}</div><div class="watch-list">${watchHTML}</div></div>
     <div class="detail-section"><div class="detail-section-title">${currentLang==='zh'?'数据来源 + 滞后':'Data sources + lag'}</div><div class="sources-grid">${sourcesHTML}</div></div>`;
